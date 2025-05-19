@@ -67,9 +67,9 @@ entrada = st.text_input("🔤 Ingresa una palabra:")
 
 if entrada:
     if automata.es_reservada(entrada):
-        st.success(f"✅ '{entrada}' es una palabra reservada.")
+        st.success(f"'{entrada}' es una palabra reservada.")
     else:
-        st.error(f"❌ '{entrada}' no es una palabra reservada.")
+        st.error(f"'{entrada}' no es una palabra reservada.")
 
     # Visualización con PyVis
     estados, transiciones = automata.obtener_transiciones()
