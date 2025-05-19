@@ -55,27 +55,32 @@ class AutomataReservadas:
         estados.add('q0')
         return list(estados), transiciones
 
-    def obtener_estado_final(self, palabra):
-        nodo = self.trie
-        camino = ['q0']
-        mapa_estados = {id(self.trie): 'q0'}
+    def obtener_estados_finales(self):
+        finales = set()
         contador = 1
+        mapa_estados = {id(self.trie): 'q0'}
 
-        for letra in palabra:
-            if letra in nodo:
-                nodo = nodo[letra]
-                if id(nodo) not in mapa_estados:
-                    mapa_estados[id(nodo)] = f"q{contador}"
+        def recorrer(nodo, estado_actual):
+            nonlocal contador
+            if '#' in nodo:
+                finales.add(estado_actual)
+            for letra, subnodo in nodo.items():
+                if letra == '#':
+                    continue
+                if id(subnodo) not in mapa_estados:
+                    nuevo_estado = f"q{contador}"
+                    mapa_estados[id(subnodo)] = nuevo_estado
                     contador += 1
-                camino.append(mapa_estados[id(nodo)])
-            else:
-                return None  # No es válida
+                else:
+                    nuevo_estado = mapa_estados[id(subnodo)]
+                recorrer(subnodo, nuevo_estado)
 
-        return camino[-1] if '#' in nodo else None
+        recorrer(self.trie, 'q0')
+        return finales
 
 # Interfaz Streamlit
 st.set_page_config(page_title="Autómata de Palabras Reservadas", layout="centered")
-st.title("Autómata Finito para Palabras Reservadas")
+st.title("🤖 Autómata Finito para Palabras Reservadas")
 
 # Definir palabras reservadas
 palabras_reservadas = ["if", "else", "for", "while", "return", "switch"]
@@ -85,21 +90,20 @@ entrada = st.text_input("🔤 Ingresa una palabra:")
 
 if entrada:
     if automata.es_reservada(entrada):
-        st.success(f"'{entrada}' es una palabra reservada.")
+        st.success(f"✅ '{entrada}' es una palabra reservada.")
     else:
-        st.error(f"'{entrada}' no es una palabra reservada.")
+        st.error(f"❌ '{entrada}' no es una palabra reservada.")
 
     # Visualización con PyVis
     estados, transiciones = automata.obtener_transiciones()
-    estado_final = automata.obtener_estado_final(entrada)
-
+    estados_finales = automata.obtener_estados_finales()
     net = Network(height='400px', directed=True)
 
     for estado in estados:
         if estado == 'q0':
             color = 'skyblue'
-        elif estado == estado_final and estado_final is not None:
-            color = 'red'  # Estado final alcanzado por la palabra
+        elif estado in estados_finales:
+            color = 'red'
         else:
             color = 'lightgreen'
         net.add_node(estado, label=estado, color=color)
@@ -119,3 +123,4 @@ if entrada:
     os.unlink(tmp_path)
 
 st.markdown("---")
+st.caption("Hecho con ❤️ usando Python, Streamlit y PyVis")
