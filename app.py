@@ -1,126 +1,34 @@
 import streamlit as st
-from pyvis.network import Network
-import tempfile
+from afd import construir_afd_desde_palabras, visualizar_afd
+from PIL import Image
 import os
 
-# Clase del autómata para palabras reservadas
-class AutomataReservadas:
-    def __init__(self, palabras):
-        self.palabras = palabras
-        self.trie = self._crear_trie(palabras)
+# Palabras reservadas
+palabras_reservadas = ['if', 'else', 'while', 'for', 'return', 'int', 'float', 'void']
 
-    def _crear_trie(self, palabras):
-        trie = {}
-        for palabra in palabras:
-            nodo = trie
-            for letra in palabra:
-                if letra not in nodo:
-                    nodo[letra] = {}
-                nodo = nodo[letra]
-            nodo['#'] = True
-        return trie
+# Construir el AFD
+afd = construir_afd_desde_palabras(palabras_reservadas)
 
-    def es_reservada(self, palabra):
-        nodo = self.trie
-        for letra in palabra:
-            if letra in nodo:
-                nodo = nodo[letra]
-            else:
-                return False
-        return '#' in nodo
-
-    def obtener_transiciones(self):
-        estados = set()
-        transiciones = []
-        contador = 1
-        mapa_estados = {id(self.trie): 'q0'}
-
-        def recorrer(nodo, estado_actual):
-            nonlocal contador
-            for letra, subnodo in nodo.items():
-                if letra == '#':
-                    continue
-                if id(subnodo) not in mapa_estados:
-                    nuevo_estado = f"q{contador}"
-                    mapa_estados[id(subnodo)] = nuevo_estado
-                    contador += 1
-                else:
-                    nuevo_estado = mapa_estados[id(subnodo)]
-
-                transiciones.append((estado_actual, letra, nuevo_estado))
-                estados.add(nuevo_estado)
-                recorrer(subnodo, nuevo_estado)
-
-        recorrer(self.trie, 'q0')
-        estados.add('q0')
-        return list(estados), transiciones
-
-    def obtener_estados_finales(self):
-        finales = set()
-        contador = 1
-        mapa_estados = {id(self.trie): 'q0'}
-
-        def recorrer(nodo, estado_actual):
-            nonlocal contador
-            if '#' in nodo:
-                finales.add(estado_actual)
-            for letra, subnodo in nodo.items():
-                if letra == '#':
-                    continue
-                if id(subnodo) not in mapa_estados:
-                    nuevo_estado = f"q{contador}"
-                    mapa_estados[id(subnodo)] = nuevo_estado
-                    contador += 1
-                else:
-                    nuevo_estado = mapa_estados[id(subnodo)]
-                recorrer(subnodo, nuevo_estado)
-
-        recorrer(self.trie, 'q0')
-        return finales
+# Visualizar AFD (se guarda como afd.png)
+visualizar_afd(afd, 'afd')
 
 # Interfaz Streamlit
-st.set_page_config(page_title="Autómata de Palabras Reservadas", layout="centered")
-st.title("🤖 Autómata Finito para Palabras Reservadas")
+st.title("Simulador de AFD para Palabras Reservadas")
+st.markdown("Este simulador usa un Autómata Finito Determinista real para validar si una palabra es reservada.")
 
-# Definir palabras reservadas
-palabras_reservadas = ["if", "else", "for", "while", "return", "switch"]
-automata = AutomataReservadas(palabras_reservadas)
+# Entrada de palabra
+palabra = st.text_input("Escribe una palabra para verificar:")
 
-entrada = st.text_input("🔤 Ingresa una palabra:")
-
-if entrada:
-    if automata.es_reservada(entrada):
-        st.success(f"✅ '{entrada}' es una palabra reservada.")
+if palabra:
+    if afd.acepta(palabra):
+        st.success(f"La palabra **{palabra}** es una palabra reservada.")
     else:
-        st.error(f"❌ '{entrada}' no es una palabra reservada.")
+        st.error(f"La palabra **{palabra}** NO es una palabra reservada.")
 
-    # Visualización con PyVis
-    estados, transiciones = automata.obtener_transiciones()
-    estados_finales = automata.obtener_estados_finales()
-    net = Network(height='400px', directed=True)
-
-    for estado in estados:
-        if estado == 'q0':
-            color = 'skyblue'
-        elif estado in estados_finales:
-            color = 'red'
-        else:
-            color = 'lightgreen'
-        net.add_node(estado, label=estado, color=color)
-
-    for origen, letra, destino in transiciones:
-        net.add_edge(origen, destino, label=letra)
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_file:
-        net.save_graph(tmp_file.name)
-        tmp_path = tmp_file.name
-
-    with open(tmp_path, 'r', encoding='utf-8') as HtmlFile:
-        source_code = HtmlFile.read()
-        components = st.components.v1
-        components.html(source_code, height=450)
-
-    os.unlink(tmp_path)
-
-st.markdown("---")
-st.caption("Hecho con ❤️ usando Python, Streamlit y PyVis")
+# Mostrar la imagen del AFD
+st.subheader("Representación del AFD")
+if os.path.exists("afd.png"):
+    image = Image.open("afd.png")
+    st.image(image, caption="AFD generado desde las palabras reservadas", use_column_width=True)
+else:
+    st.warning("No se encontró la imagen del AFD.")
