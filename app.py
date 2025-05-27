@@ -121,3 +121,7 @@ if entrada:
         components.html(source_code, height=450)
 
     os.unlink(tmp_path)
+
+st.caption("El estado inicial es azul, y los rojos son los estados finales")
+st.caption("De momento las palabras que acepta son if, else, for, while, return, switch por el tema del grafico ya qu se haria bastante mas grande")
+st.caption("solo haria falta agregar mas a la lista palabras_reservadas desde el codigo.")
