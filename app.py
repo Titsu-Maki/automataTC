@@ -1,20 +1,10 @@
 import streamlit as st
 from afd import construir_afd_desde_palabras, visualizar_afd
-from PIL import Image
-import os
 
-# Palabras reservadas
-palabras_reservadas = ['if', 'else', 'while', 'for', 'return', 'int', 'float', 'void']
-
-# Construir el AFD
-afd = construir_afd_desde_palabras(palabras_reservadas)
-
-# Visualizar AFD (se guarda como afd.png)
-visualizar_afd(afd, 'afd')
-
-# Interfaz Streamlit
 st.title("Simulador de AFD para Palabras Reservadas")
-st.markdown("Este simulador usa un Autómata Finito Determinista real para validar si una palabra es reservada.")
+
+palabras_reservadas = ['if', 'else', 'while', 'for', 'return', 'int', 'float', 'void']
+afd = construir_afd_desde_palabras(palabras_reservadas)
 
 # Entrada de palabra
 palabra = st.text_input("Escribe una palabra para verificar:")
@@ -25,10 +15,7 @@ if palabra:
     else:
         st.error(f"La palabra **{palabra}** NO es una palabra reservada.")
 
-# Mostrar la imagen del AFD
+# Mostrar imagen del AFD generada en memoria
 st.subheader("Representación del AFD")
-if os.path.exists("afd.png"):
-    image = Image.open("afd.png")
-    st.image(image, caption="AFD generado desde las palabras reservadas", use_column_width=True)
-else:
-    st.warning("No se encontró la imagen del AFD.")
+imagen_afd = visualizar_afd(afd)
+st.image(imagen_afd, caption="AFD generado", use_column_width=True)

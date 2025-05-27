@@ -1,4 +1,6 @@
 from graphviz import Digraph
+from PIL import Image
+import io
 
 class Estado:
     def __init__(self, nombre, es_final=False):
@@ -63,25 +65,22 @@ def construir_afd_desde_palabras(palabras):
     return afd
 
 
-def visualizar_afd(afd, nombre_archivo='afd'):
-    dot = Digraph(name=nombre_archivo, format='png')
-    
-    # Nodo invisible para apuntar al estado inicial
+def visualizar_afd(afd):
+    dot = Digraph(name="AFD", format='png')
+
     dot.attr('node', shape='none')
     dot.node('')
-    
-    # Agregar nodos de estados
+
     for nombre, estado in afd.estados.items():
         forma = 'doublecircle' if estado.es_final else 'circle'
         dot.attr('node', shape=forma)
         dot.node(nombre)
 
-    # Flecha hacia el estado inicial
     dot.edge('', afd.estado_inicial.nombre)
 
-    # Agregar transiciones
     for (origen, simbolo), destino in afd.transiciones.items():
         dot.edge(origen, destino, label=simbolo)
 
-    # Guardar como imagen
-    dot.render(filename=nombre_archivo, cleanup=True)
+    # Generar imagen en memoria
+    img_bytes = dot.pipe(format='png')
+    return Image.open(io.BytesIO(img_bytes))
