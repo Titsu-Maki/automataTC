@@ -1,5 +1,5 @@
 import streamlit as st
-from afd import construir_afd_desde_palabras, visualizar_afd
+from afd import construir_afd_desde_palabras, visualizar_afd_con_networkx
 
 st.title("Simulador de AFD para Palabras Reservadas")
 
@@ -17,5 +17,6 @@ if palabra:
 
 # Mostrar imagen del AFD generada en memoria
 st.subheader("Representación del AFD")
-imagen_afd = visualizar_afd(afd)
-st.image(imagen_afd, caption="AFD generado", use_column_width=True)
+grafico = visualizar_afd_con_networkx(afd)
+st.pyplot(grafico)
+
